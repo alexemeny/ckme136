@@ -1,0 +1,98 @@
+---
+title: "CAPSTONE"
+project: Housing Price Prediction
+course: ckme136 XJO
+instructor: Can Kavaklioglu 
+output: html_document
+---
+
+#Leaving 2 spaces between ideas and 1 people writing and code boxes. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Installs and Libraries
+
+```{r}
+install.packages("PerformanceAnalytics")
+install.packages("class")
+install.packages("gmodels")
+install.packages('FNN')
+library("PerformanceAnalytics")  ##add tags for what each is used ofr
+library(class)
+library(gmodels)
+library(FNN)
+```
+
+
+The dataset is related to house prices of residential homes in Ames, Iowa. I came across it in Kaggle's competition section. For more info:
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques
+
+```{r}
+data <- read.csv("~/Desktop/ames.csv", header = TRUE, sep = ',', stringsAsFactors = F)
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
