@@ -1,0 +1,744 @@
+---
+title: "CAPSTONE"
+project: Housing Price Prediction
+course: ckme136 XJO
+instructor: Can Kavaklioglu 
+output: html_document
+---
+
+OUTLINE with Sections
+
+Exploratory data analysis
+
+dimensons and type of variables
+missing values
+histogram to represent visual of continous variables or density plot
+multivariate analysis like correlation (need data all numeric)
+barplots for categorical variables
+
+numeric
+categorical
+onehotencoding??
+
+get ride of gr. lving above 4000
+only normal sales
+only houses that have basements..more uniform!!
+
+new variables - total square feet, total bathrooms
+most important categorical is neighbourhood : could bin on rich and poor levels?
+
+
+IMPORTANT!! prepare data for modeling!! - IMPORTANT
+1) drop high correlations
+**look at correlation matrix again, and drop variables with high correlation.drop lowest corr to response variable!!
+
+For instance: GarageCars and GarageArea have a correlation of 0.89. Of those two, I am dropping the variable with the lowest correlation with SalePrice (which is GarageArea with a SalePrice correlation of 0.62. GarageCars has a SalePrice correlation of 0.64).
+
+dropVars <- c('YearRemodAdd', 'GarageYrBlt', 'GarageArea', 'GarageCond', 'TotalBsmtSF', 'TotalRmsAbvGrd', 'BsmtFinSF1')
+
+all <- all[,!(names(all) %in% dropVars)]
+2) remove outliers
+3) split into numerical and categorical
+4) skewness and normalize
+5) one hot encoding categorical variables. 
+The last step needed to ensure that all predictors are converted into numeric columns (which is required by most Machine Learning algorithms) is to ‘one-hot encode’ the categorical variables. This basically means that all (not ordinal) factor values are getting a seperate colums with 1s and 0s (1 basically means Yes/Present). To do this one-hot encoding, I am using the model.matrix() function.
+
+DFdummies <- as.data.frame(model.matrix(~.-1, DFfactors))
+dim(DFdummies)
+
+Then remove one hot encoded wiht littel to no variance**Also taking out variables with less than 10 ‘ones’ in the train set.
+
+fewOnes <- which(colSums(DFdummies[1:nrow(all[!is.na(all$SalePrice),]),])<10)
+colnames(DFdummies[fewOnes])
+6) skewness or log of saleprice??
+7) compose train and test sets
+
+
+MODELING CAN START!!!
+
+
+
+----------------------------------------------------------------------------------
+Introduction
+
+2930 property sales in Ames, Iowa of residential homes between the years 2006 and 2012. 
+Dataset contains a diverse mix of nominal, ordinal, continuous and discrete attributes.
+Goal: best model to predict final sale prices of houses.
+
+1)	Research Problem & Question: 
+a.	Context of Problem – arbitrariness of housing price // what influeneces price negotiations?
+b.	Theme – predictive analytics, challenge, opportunity to determine what has impact on final home price 
+c.	State the problem: Research question - Which explanatory variables of residential homes can be used to predict sale price effectively?
+d.	How propose to solve this problem?: Techniques
+
+
+----------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------
+2)	Literature Review
+a.	Summary of related papers – own words, some sort of flow and relationtion to topic
+----------------------------------------------------------------------------------
+
+#Leaving 2 spaces between ideas and 1 people writing and code boxes. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+----------------------------------------------------------------------------------
+Installs and Libraries
+----------------------------------------------------------------------------------
+
+```{r}
+#install.packages("PerformanceAnalytics") #A3
+#install.packages("class") #A3
+#install.packages("gmodels") #A3
+#install.packages('FNN') #A3
+#install.packages("ggplots2", dependencies = TRUE)  #visualtion of data *not working for R. V. 3.3.3
+library("PerformanceAnalytics")  ##add tags for what each is used ofr
+library(class)
+library(gmodels)
+library(FNN)
+
+
+#install.packages("knitr")
+#install.packages("plyr")
+#install.packages("dplyr")
+#install.packages('corrplot')
+####install.packages('caret') #not working?
+#install.packages('gridExtra')
+#install.packages('scales')
+#install.packages('Rmisc')
+#install.packages('ggrepel')
+#install.packages('randomForest')
+#install.packages('psych')
+#install.packages('xgboost')
+
+library(knitr)
+#library(ggplot2)
+library(plyr)
+library(dplyr)
+library(corrplot)
+#library(caret)
+library(gridExtra)
+library(scales)
+library(Rmisc)
+library(ggrepel)
+library(randomForest)
+library(psych)
+library(xgboost)
+```
+
+----------------------------------------------------------------------------------
+3)	Dataset – how its only includes residential homes, Iowa …dimension, year range, year it was collected, 
+a.	Source: Ames Housing Dataset, where found – kaggle
+b.	Why good choice?
+c.	Description of dataset
+d.	Which attributes/variables will or will not use in analysis
+e.	Descriptive Statistics – summary, overview, explanation of each variable.  (commentary)
+f.	Manuel went through all variables and picked top 25, will compare to these at end to see if any relation?? Maybe
+----------------------------------------------------------------------------------
+
+Acquired off kaggle is a brief description of the data. For further info on how each attribute is measured: https://storage.googleapis.com/kaggle-competitions-data/kaggle/5407/205873/data_description.txt?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1553882575&Signature=T6oWIv13GvdjGf7WG6RZjZAbHfuRhVaC0km%2Be8cpOffhzu2DZ4JmrRocx9%2FlqRumuxW59sSG1iDzXFhhCco454%2BUmR%2Fxbu3uCHpD1dauiOSqWJSN1EnkHolkSzNCyhhSEwYCjda584OYUyRvYFMH1e1PzbW2XptAQmiML8K2e76Ml4PeOC8JT4Fv5X6uJ%2BwZ8MMzyuMwdcO9ojbYuXgXttmeJKmFmtsyrLVcW7PTg4EYbefKsi37eiH4b6eXPAIxrRyLr0%2F4m6Wtc9p9ATCNfeT24hvrZGb2w8iHCm%2Bt6gJXBvZeCX0PurdKabo%2FQbh8IX8y1%2BMmLp%2BDfNT2XIj7zA%3D%3D
+
+
+SalePrice - the property's sale price in dollars. This is the target variable that you're trying to predict.
+MSSubClass: The building class
+MSZoning: The general zoning classification
+LotFrontage: Linear feet of street connected to property
+LotArea: Lot size in square feet
+Street: Type of road access
+Alley: Type of alley access
+LotShape: General shape of property
+LandContour: Flatness of the property
+Utilities: Type of utilities available
+LotConfig: Lot configuration
+LandSlope: Slope of property
+Neighborhood: Physical locations within Ames city limits
+Condition1: Proximity to main road or railroad
+Condition2: Proximity to main road or railroad (if a second is present)
+BldgType: Type of dwelling
+HouseStyle: Style of dwelling
+OverallQual: Overall material and finish quality
+OverallCond: Overall condition rating
+YearBuilt: Original construction date
+YearRemodAdd: Remodel date
+RoofStyle: Type of roof
+RoofMatl: Roof material
+Exterior1st: Exterior covering on house
+Exterior2nd: Exterior covering on house (if more than one material)
+MasVnrType: Masonry veneer type
+MasVnrArea: Masonry veneer area in square feet
+ExterQual: Exterior material quality
+ExterCond: Present condition of the material on the exterior
+Foundation: Type of foundation
+BsmtQual: Height of the basement
+BsmtCond: General condition of the basement
+BsmtExposure: Walkout or garden level basement walls
+BsmtFinType1: Quality of basement finished area
+BsmtFinSF1: Type 1 finished square feet
+BsmtFinType2: Quality of second finished area (if present)
+BsmtFinSF2: Type 2 finished square feet
+BsmtUnfSF: Unfinished square feet of basement area
+TotalBsmtSF: Total square feet of basement area
+Heating: Type of heating
+HeatingQC: Heating quality and condition
+CentralAir: Central air conditioning
+Electrical: Electrical system
+1stFlrSF: First Floor square feet
+2ndFlrSF: Second floor square feet
+LowQualFinSF: Low quality finished square feet (all floors)
+GrLivArea: Above grade (ground) living area square feet
+BsmtFullBath: Basement full bathrooms
+BsmtHalfBath: Basement half bathrooms
+FullBath: Full bathrooms above grade
+HalfBath: Half baths above grade
+Bedroom: Number of bedrooms above basement level
+Kitchen: Number of kitchens
+KitchenQual: Kitchen quality
+TotRmsAbvGrd: Total rooms above grade (does not include bathrooms)
+Functional: Home functionality rating
+Fireplaces: Number of fireplaces
+FireplaceQu: Fireplace quality
+GarageType: Garage location
+GarageYrBlt: Year garage was built
+GarageFinish: Interior finish of the garage
+GarageCars: Size of garage in car capacity
+GarageArea: Size of garage in square feet
+GarageQual: Garage quality
+GarageCond: Garage condition
+PavedDrive: Paved driveway
+WoodDeckSF: Wood deck area in square feet
+OpenPorchSF: Open porch area in square feet
+EnclosedPorch: Enclosed porch area in square feet
+3SsnPorch: Three season porch area in square feet
+ScreenPorch: Screen porch area in square feet
+PoolArea: Pool area in square feet
+PoolQC: Pool quality
+Fence: Fence quality
+MiscFeature: Miscellaneous feature not covered in other categories
+MiscVal: $Value of miscellaneous feature
+MoSold: Month Sold
+YrSold: Year Sold
+SaleType: Type of sale
+SaleCondition: Condition of sale
+SalePrice: Selling Price of the House
+
+
+
+The dataset is related to house prices of residential homes in Ames, Iowa. I came across it in Kaggle's competition section. For more info:
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques
+
+```{r}
+ames <- read.csv("~/Desktop/ames.csv", header = TRUE, sep = ',', stringsAsFactors = F)  #stringsAsFactors = F add this to read in as character strings instead of factors (even though many variables are ordinal), so can clean and engineer better.  
+head(ames) #see it loaded correctly
+View(ames) #see as dataframe
+
+```
+
+
+```{r}
+dim(ames) 
+#see that there are 2930 rows and 82 variables.
+
+str(ames[,c(1:9, 82)])
+#show structure of first 9 variables and then target variable (Sale Price)
+
+```
+
+
+```{r}
+
+#found csv file that had ames data alreaady combined, but alternatively could bind the train and test datasets provided off kaggle. Link to download full: https://www.openintro.org/stat/data/?data=ames
+
+ames$Order <- NULL
+#dont need order variable, no actual order
+
+uniqueID <- ames$PID
+ames$PID <- NULL
+#keep ID's as vector, but going to remove from dataset.
+
+dim(ames)
+#now are 79 explanatory variables and 1 response variable. still 2930 rows.
+#these 80 variables focus on the quality and quanitity of physical attributes of the houses. Basically what a potential home buyer would want to know about a property.
+#example questions are: size of lot, square feet? when built? number of bedrooms, bathrooms, garage, pool, finished basement? etc. 
+
+```
+
+####### use %% for new idea of topic ######
+
+1. Check data characteristics. Is there missing data? 
+%%Check for missing data! 
+
+In checking for complete rows of data it is surprising to get the result that all 2930 observations have missing data. Upon further analysis of the variables can see that NA which is representing missing fields does not necessarily mean missing data. Can replace appropriate NA's with None or 0 instead to show doesnt have this element. Example being Alley, says NA when House does not have one connecting. For other results that may actually be missing can use mean or median values of remaining. 
+
+```{r}
+
+summary(ames)
+#There are 20 continuous variables related to area dimensions such as total square footage as well as individual measurements of basement, main living area and porch square footages. 
+#There are 14 discrete variables describing number of items in the house such as bedrooms, garage capacity, kitchens and bathrooms etc. 
+#There are 46 categorical variables both nominal and ordinal. Have a range of 2 classes for variable Street (gravel or paved) all the way to 28 classes for variable Neighbourhoods. 
+#the summary statistics also give idea of range and/or frequency for each variable. 
+
+sum(is.na(ames))
+#are 13960 NA fields, need to look further into this. 
+sum(is.null(ames))
+#0 null fields
+
+missing_values <- ames[!complete.cases(ames),]
+nrow(missing_values)
+#see number of rows that have missing values, is 2930. Meaning all of them so something is going on, will explore further. 
+
+
+#????replace NA's in the data for each row with correct values. 
+```
+
+```{r}
+
+#continued missing values 
+#check which columns have NA's and how many total. Are 25, as seen below which need to be fixed this is a good starting point.
+
+NAcolumins <- names(which(sapply(ames, anyNA)))
+NAcolumins
+length(NAcolumins)
+
+
+```
+
+
+Besides making sure that the NAs are taken care off, I have also converted character variables into ordinal integers if there is clear ordinality, or into factors if levels are categories without ordinality. I will convert these factors into numeric later on by using one-hot encoding (using the model.matrix function).
+
+---
+Get rid of NA values, convert character variables to intergers if ordinality or to factors if not. Afterwards will work on conversion of these factors (ones with no apparent order to there levels) into numeric variables thorugh one-hot encoding. Usse the model.matrix function.
+
+Goal to go through all columns and convert into numeric or factors so can be converted afterwards. 
+Will replace NA with 0 in numeric fields and 'None' for character variables where appropriate. 
+---
+Numeric variables replace NA's.
+```{r}
+
+
+
+
+```
+
+
+---
+Character Variables with ordinal properties to integers. (Both with and withou NA's)
+```{r}
+
+
+```
+
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
+
+---
+Character variables to factors becasue no ordinality
+
+Alley
+```{r}
+
+sum(is.na(ames$Alley))
+#there are 2732 NA values in the Alley variable. They represent no alley so will replace NA with 'NONE' and turn into a factor because categories are not ordinal.
+
+ames$Alley[is.na(ames$Alley)] <- 'None'
+ames$Alley <- as.factor(ames$Alley)
+table(ames$Alley)
+
+#now Alley is a factor with 3 levels.
+```
+
+MS.Zoning
+```{r}
+
+#MS.Zoning variable has no NA values and is not ordinal so turn to factor.
+
+ames$MS.Zoning <- as.factor(ames$MS.Zoning)
+table(ames$MS.Zoning)
+
+#MS.Zoning is now a factor with 7 levels. 
+
+```
+
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
+
+---
+Convert Numeric Variable into factors!
+
+MS.SubClass
+```{r}
+
+#type of property in sale through reference number.
+#convert to factor
+
+ames$MS.SubClass <- as.factor(ames$MS.SubClass)
+table(ames$MS.SubClass)
+
+#now MS.SubClass is a factor with 16 levels
+```
+
+Month Sold
+```{r}
+
+ames$Mo.Sold <- as.factor(ames$Mo.Sold)
+table(ames$Mo.Sold)
+
+#now Mo.Sold is factor with 12 levels. (January to December)
+#Could indicate seasonality. Summer months have high totals and begining and end of year seem to be slower months.
+
+```
+
+Year Sold
+```{r}
+
+ames$Yr.Sold <- as.factor(ames$Yr.Sold)
+table(ames$Yr.Sold)
+
+#Yr. Sold variable is a factor now with 5 levels representing the years 2006 to 2010. 
+
+```
+
+
+done converting all to numeric now can do a littel feature engineering before preparing data for model. 
+----
+
+
+
+Condition of Sale: Normal or Abnormal..stick with just normal!!
+
+```{r}
+
+#to not complicate results going to focus on variable Sale.Condition that is 'normal'. The other 5 classes here are 1) Abnormal such as trade, foreclosure, or short sale 2) Adjoing land purchase, 3)allocation meaning two linked properities, such as condo and garage unit 4)sale between family members and 5) partial when new home was not complete yet. So in summary a normal sale would represent a more common typical transaction of a home. Eliminate any bonus or discounts potentially present in abnormal sales that is beyond scope of data. 
+
+```
+
+
+
+
+
+IMPORTANT:Explore Response Variable
+ALSO 2. What is the correlation between the attributes other than SalePrice? 
+```{r}
+
+summary(data$SalePrice)
+hist(data$SalePrice)
+#quick histogram shows that the sale prices are right skewed. A logicial explanation for this is that fewer people can afford more expensive homes. This is something to keep in mind and potentially look at houses under the value of 400,000. **
+```
+
+
+1st look at numeric variables relation to sale price. 
+```{r}
+
+numericV <- which(sapply(data, is.numeric)) #vector with numeric variables
+length(numericV)
+#there are 37 numeric variables
+
+frame_numericV <- data[,numericV]
+cor_numericV <- cor(frame_numericV, use = "pairwise.complete.obs") 
+#correlation of all 37 numeric variables
+
+Ranked_cor_numericV <- as.matrix(sort(cor_numericV[,'SalePrice'], decreasing = TRUE))
+#gives correlations in decreasing strength
+
+top_cor_numericV <- names(which(apply(Ranked_cor_numericV, 1, function(x) abs(x)>0.5))) 
+#top correlations above 0.5 or -0.5. 
+
+cor_numericV <- cor_numericV[top_cor_numericV,top_cor_numericV]
+
+corrplot.mixed(cor_numericV, tl.col = 'blue', tl.pos = 'lt')
+#in visual can see numeric attributes with highest correlation to SalePrice as Overall Quality, Ground Living Area and Garage Cars. 
+```
+
+```{r}
+par(mfrow=c(2,2))
+#use to plot 4 main correlations from above
+
+plot(data$Overall.Qual, data$SalePrice)
+plot(data$Garage.Area, data$Garage.Cars)
+plot(data$X1st.Flr.SF, data$Total.Bsmt.SF)
+plot(data$Garage.Yr.Blt, data$Year.Built)
+
+#this shows a visual of directionality. All strong positive correlations above 0.8. Collinearity is an issue from multiple variables provide similiar degree of predictive value. 
+```
+
+```{r}
+chart.Correlation(cor_numericV, histogram=TRUE, pch=19)
+#installed "PerformanceAnalytics" package to use chart.Correlation
+#Another way to visual the correlation between variables.
+
+?? doesnt really fit!
+
+```
+
+```{r}
+#Look at strong correlations with SalePrice. 
+
+boxplot(data$SalePrice~data$Overall.Qual)
+boxplot(data$SalePrice~data$Gr.Liv.Area)
+boxplot(data$SalePrice~data$Garage.Cars)
+
+#low score could explain low price so be dangerous to remove outliers here
+# can think remove gr living area above 4000, just outliers of really big homes proportionate to rest of houses. 
+#fix up with header, x and y label and ranges...main point is to show outliers or 
+```
+
+
+```{r}
+Need all of data to be numberic first!!! Then look at correlation. 
+  
+cor_data <- cor(data[,-80])
+#correlation among other attributes other than response variable. 
+#strong moderate or weak (0.8 above, 0.5 above, below 0.5)
+cor_data
+
+VISUAL
+par(mfrow=c(2,2))
+#use to plot 4 main correlations form above
+
+Sample:
+plot(white_wine$density, white_wine$residual.sugar)
+plot(white_wine$density, white_wine$alcohol)
+plot(white_wine$density, white_wine$total.sulfur.dioxide)
+plot(white_wine$total.sulfur.dioxide, white_wine$free.sulfur.dioxide)
+
+chart.Correlation(cor_wine, histogram=TRUE, pch=19)
+#installed "PerformanceAnalytics" package to use chart.Correlation
+#Another way to visual the correlation between variables. 
+
+
+
+Graph the frequency distribution of saleprice.
+hist(white_wine$quality, breaks=seq(2,9,1), col = 'red', main = "Frequency Distribution of Wine Quality")
+#visual of histogram
+white_wine$ratings <- cut(white_wine$quality, 3, labels=c("Low","Medium","High"))
+plot(white_wine$ratings)
+#maybe can work above line in for small visual of final sale price in 3 groups...see which is most popular. 
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+Remove outliers...under 4000??
+
+
+*Total square footage (new vairable of ground and basement) to salprice..plot this fitted line
+Scatterplot of Sale Price versus Total Home Area by Sale Condition (Ames Data)
+```{r}
+
+```
+
+In selecting observations...could go further and eliminate homes without a basement!! or just look at one story homes..could also draw a simple random sample from remaining normal sales to build a final set. 
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+The nominal variable was created by recoding the number of fireplaces
+into a simple Yes/No (1/0) dummy variable.
+***neighborhood variable into their models by converting it to a set of dummy (indicator) variables. (one hot encoding)
+```{r}
+
+```
+
+IMPORTANT 5. Normalize the data set. 
+```{r}
+
+#need data to all be numeric 1st!! this is top priority. 
+
+normalize <- function(x) {return ((x - min(x)) / (max(x) - min(x))) }
+
+wine_normalized <- as.data.frame(lapply(white_wine[,1:11], normalize))
+summary(wine_normalized)
+
+summary(white_wine)
+#original data set for comparision.
+
+
+```
+
+IMPORTANT 6. Divide the data to training and testing groups. 
+```{r}
+
+#once normalized. 
+set.seed(100)
+wine_new <- sample(nrow(wine_normalized), floor(nrow(wine_normalized)*0.7))
+wine_train <- wine_normalized[wine_new,]
+wine_test <- wine_normalized[-wine_new,]
+ratings_train <- white_wine$ratings[wine_new]
+ratings_test <- white_wine$ratings[-wine_new]
+
+#test to make sure all data was divided into 2 groups. And this is true.
+nrow(wine_normalized) == (nrow(wine_train) + nrow(wine_test))
+#split data into training and test by 70/30.
+
+NOW NOW NOW
+#can use algorithm to predict, have a train and test set. 
+
+
+```
+
+
+8. Evaluate the model performance. 
+
+```{r}
+
+accuracy, percision, recall
+
+```
+
+
+
+
+
+----------------------------------------------------------------------------------
+4)	Data Preparation and Analysis
+a.	Load correctly
+b.	Format, not duplicates, missing values, fields are uniform, dimensions
+c.	Clean, mention summary and descriptive statistics as way to  draw insights from data…assist me in building a better expertise of the domain of features so I can for effectively look for patterns and relationships. 1st take. (can include, histogram, boplot, pairwise scatterplot to observe correlation, distribution of variables, skewness and potential outliers)
+d.	Look at target variable of final sale price. For continuous variables look at min, max, mean, median, quartiles. Also since target variable of final sale price is continuous want to look at continuous house prices instead of individual house price ranges. 
+e.	Transform data or normalize (ONE HOT ENCODING): In order to run models on data will need to transform it. Don't want string types to train machine learning models so need values to be numerical. Ways includes converting discrete to continuous variables (ex. One-hot-encoding, convert and create more columns). Another way involves creating dummy variables for categorical variables, such as assigning values of 0 or 1 to show if a 
+----------------------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+----------------------------------------------------------------------------------
+5)	Feature selection:
+a.	Optimize parameters by selecting and analyzing / build model (this case regression)
+b.	Normalization.  (Xnew=(X-Xmin)/(Xmax-Xmin). Scale. 
+c.	Use creativity to build new features from the input data. An example is total square footage (TOTAL BSMT SF + GR LIV AREA). Look for positive variables that might add value such as being near a park or negative variables that reduce value such as being near a railroad. 
+d.	Compare feature selection from manual chosen vs algorithm selection.
+----------------------------------------------------------------------------------
+
+
+create feature: There are 4 bathroom variables. Individually, these variables are not very important. However, I assume that I if I add them up into one predictor, this predictor is likely to become a strong one.
+
+“A half-bath, also known as a powder room or guest bath, has only two of the four main bathroom components-typically a toilet and sink.” Consequently, I will also count the half bathrooms as half.
+all$TotBathrooms <- all$FullBath + (all$HalfBath*0.5) + all$BsmtFullBath + (all$BsmtHalfBath*0.5)
+
+
+
+```{r}
+
+```
+
+
+
+
+
+```{r}
+
+```
+
+----------------------------------------------------------------------------------
+6)	Train and Test Algorithms
+a.	Regression
+b.	Random forest
+c.	CART
+d.	SVM support vector machine?
+e.	Ensemble learning? Xgboost (use this for next section to try and improve results or random forest too 
+f.	Lasso or ridge regression
+g.	Neural network? Something new to try?? Thought was really interesting
+
+•	Split into test and train sets so can use k-fold validation to compare models. (80/20, train, test, 10 fold
+----------------------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+----------------------------------------------------------------------------------
+7)	Evaluate
+a.	Choose performance metrics.
+b.	Avoid overfitting
+c.	GO BACK part: PCA. feature engineering and using the statistical procedure of principle component analysis to reduce dimensionality & improve prediction results. Such as accuracy. 
+d.	To evaluate performance can look at plot of actual vs predicted values, see a fitted regression line,  r squared statistical measure to see the level of variability the model explains, (A r^2 of 1 would indicate the regression predictions fit the data perfectly, I’d be looking for a low P value and high r^2 value combination to see if my regression model has significant variables). Can look at mean absolute error also. 
+----------------------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+----------------------------------------------------------------------------------
+8)	Results
+a.	Look at statistical tests on results. 
+b.	Precision, recall etc. 
+c.	Look into reasons behind variables with most predictive significance. Discussion and application to housing market. Relate to relevancy and applicability to for other cities housing parameters. Features that are missing such as backyard size, economy of closest major city, proximity to public transportations, schools, etc. 
+
+CONCLUSION - summary of what did and major points findings
+----------------------------------------------------------------------------------
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
