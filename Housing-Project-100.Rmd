@@ -1,0 +1,2064 @@
+---
+title: "CAPSTONE"
+project: Housing Price Prediction
+course: ckme136 XJO
+instructor: Can Kavaklioglu 
+output: html_document
+---
+
+OUTLINE with Sections
+
+Exploratory data analysis
+
+----------------------------------------------------------------------------------
+Introduction
+
+2930 property sales in Ames, Iowa of residential homes between the years 2006 and 2012. 
+Dataset contains a diverse mix of nominal, ordinal, continuous and discrete attributes.
+Goal: best model to predict final sale prices of houses.
+
+1)	Research Problem & Question: 
+a.	Context of Problem – arbitrariness of housing price // what influeneces price negotiations?
+b.	Theme – predictive analytics, challenge, opportunity to determine what has impact on final home price 
+c.	State the problem: Research question - Which explanatory variables of residential homes can be used to predict sale price effectively?
+d.	How propose to solve this problem?: Techniques
+
+
+add from word document separate
+----------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------
+2)	Literature Review
+add from separate word document
+----------------------------------------------------------------------------------
+
+#Leaving 2 spaces between ideas and 1 between writing and code boxes. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+----------------------------------------------------------------------------------
+Installs and Libraries
+----------------------------------------------------------------------------------
+
+*clean up...only keep ones I end up using
+```{r}
+#install.packages("PerformanceAnalytics") #A3
+#install.packages("class") #A3
+#install.packages("gmodels") #A3
+#install.packages('FNN') #A3
+#install.packages("ggplots2", dependencies = TRUE)  #visualtion of data *not working for R. V. 3.3.3
+library("PerformanceAnalytics")  ##add tags for what each is used ofr
+library(class)
+library(gmodels)
+library(FNN)
+
+
+#install.packages("knitr")
+#install.packages("plyr") # use revalue function
+#install.packages("dplyr")
+#install.packages('corrplot')
+####install.packages('caret') #not working?
+#install.packages('gridExtra')
+#install.packages('scales')
+#install.packages('Rmisc')
+#install.packages('ggrepel')
+install.packages('randomForest') #not for R.3.3.3
+#install.packages('psych')
+#install.packages('xgboost')
+
+library(knitr)
+#library(ggplot2)
+library(plyr)
+library(dplyr)
+library(corrplot)
+#library(caret)
+library(gridExtra)
+library(scales)
+library(Rmisc)
+library(ggrepel)
+library(randomForest)
+library(psych)
+library(xgboost)
+```
+
+----------------------------------------------------------------------------------
+3)	Dataset – how its only includes residential homes, Iowa …dimension, year range, year it was collected, 
+a.	Source: Ames Housing Dataset, where found – kaggle
+b.	Why good choice?
+c.	Description of dataset
+d.	Which attributes/variables will or will not use in analysis
+e.	Descriptive Statistics – summary, overview, explanation of each variable.  (commentary)
+----------------------------------------------------------------------------------
+
+Acquired off kaggle is a brief description of the data. For further info on how each attribute is measured: https://storage.googleapis.com/kaggle-competitions-data/kaggle/5407/205873/data_description.txt?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1553882575&Signature=T6oWIv13GvdjGf7WG6RZjZAbHfuRhVaC0km%2Be8cpOffhzu2DZ4JmrRocx9%2FlqRumuxW59sSG1iDzXFhhCco454%2BUmR%2Fxbu3uCHpD1dauiOSqWJSN1EnkHolkSzNCyhhSEwYCjda584OYUyRvYFMH1e1PzbW2XptAQmiML8K2e76Ml4PeOC8JT4Fv5X6uJ%2BwZ8MMzyuMwdcO9ojbYuXgXttmeJKmFmtsyrLVcW7PTg4EYbefKsi37eiH4b6eXPAIxrRyLr0%2F4m6Wtc9p9ATCNfeT24hvrZGb2w8iHCm%2Bt6gJXBvZeCX0PurdKabo%2FQbh8IX8y1%2BMmLp%2BDfNT2XIj7zA%3D%3D
+
+
+SalePrice - the property's sale price in dollars. This is the target variable that you're trying to predict.
+MSSubClass: The building class
+MSZoning: The general zoning classification
+LotFrontage: Linear feet of street connected to property
+LotArea: Lot size in square feet
+Street: Type of road access
+Alley: Type of alley access
+LotShape: General shape of property
+LandContour: Flatness of the property
+Utilities: Type of utilities available
+LotConfig: Lot configuration
+LandSlope: Slope of property
+Neighborhood: Physical locations within Ames city limits
+Condition1: Proximity to main road or railroad
+Condition2: Proximity to main road or railroad (if a second is present)
+BldgType: Type of dwelling
+HouseStyle: Style of dwelling
+OverallQual: Overall material and finish quality
+OverallCond: Overall condition rating
+YearBuilt: Original construction date
+YearRemodAdd: Remodel date
+RoofStyle: Type of roof
+RoofMatl: Roof material
+Exterior1st: Exterior covering on house
+Exterior2nd: Exterior covering on house (if more than one material)
+MasVnrType: Masonry veneer type
+MasVnrArea: Masonry veneer area in square feet
+ExterQual: Exterior material quality
+ExterCond: Present condition of the material on the exterior
+Foundation: Type of foundation
+BsmtQual: Height of the basement
+BsmtCond: General condition of the basement
+BsmtExposure: Walkout or garden level basement walls
+BsmtFinType1: Quality of basement finished area
+BsmtFinSF1: Type 1 finished square feet
+BsmtFinType2: Quality of second finished area (if present)
+BsmtFinSF2: Type 2 finished square feet
+BsmtUnfSF: Unfinished square feet of basement area
+TotalBsmtSF: Total square feet of basement area
+Heating: Type of heating
+HeatingQC: Heating quality and condition
+CentralAir: Central air conditioning
+Electrical: Electrical system
+1stFlrSF: First Floor square feet
+2ndFlrSF: Second floor square feet
+LowQualFinSF: Low quality finished square feet (all floors)
+GrLivArea: Above grade (ground) living area square feet
+BsmtFullBath: Basement full bathrooms
+BsmtHalfBath: Basement half bathrooms
+FullBath: Full bathrooms above grade
+HalfBath: Half baths above grade
+Bedroom: Number of bedrooms above basement level
+Kitchen: Number of kitchens
+KitchenQual: Kitchen quality
+TotRmsAbvGrd: Total rooms above grade (does not include bathrooms)
+Functional: Home functionality rating
+Fireplaces: Number of fireplaces
+FireplaceQu: Fireplace quality
+GarageType: Garage location
+GarageYrBlt: Year garage was built
+GarageFinish: Interior finish of the garage
+GarageCars: Size of garage in car capacity
+GarageArea: Size of garage in square feet
+GarageQual: Garage quality
+GarageCond: Garage condition
+PavedDrive: Paved driveway
+WoodDeckSF: Wood deck area in square feet
+OpenPorchSF: Open porch area in square feet
+EnclosedPorch: Enclosed porch area in square feet
+3SsnPorch: Three season porch area in square feet
+ScreenPorch: Screen porch area in square feet
+PoolArea: Pool area in square feet
+PoolQC: Pool quality
+Fence: Fence quality
+MiscFeature: Miscellaneous feature not covered in other categories
+MiscVal: $Value of miscellaneous feature
+MoSold: Month Sold
+YrSold: Year Sold
+SaleType: Type of sale
+SaleCondition: Condition of sale
+SalePrice: Selling Price of the House
+
+
+
+The dataset is related to house prices of residential homes in Ames, Iowa. I came across it in Kaggle's competition section. For more info:
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques
+
+```{r}
+ames <- read.csv("~/Desktop/ames.csv", header = TRUE, sep = ',', stringsAsFactors = F)  #stringsAsFactors = F add this to read in as character strings instead of factors (even though many variables are ordinal), so can clean and engineer better.  
+head(ames) #see it loaded correctly
+#View(ames) #see as dataframe
+
+```
+
+
+```{r}
+dim(ames) 
+#see that there are 2930 rows and 82 variables.
+
+str(ames[,c(1:9, 82)])
+#show structure of first 9 variables and then target variable (Sale Price)
+
+```
+
+
+```{r}
+
+#found csv file that had ames data alreaady combined, but alternatively could bind the train and test datasets provided off kaggle. Link to download full: https://www.openintro.org/stat/data/?data=ames
+
+ames$Order <- NULL
+#dont need order variable, no actual order
+
+uniqueID <- ames$PID
+ames$PID <- NULL
+#keep ID's as vector, but going to remove from dataset.
+
+dim(ames)
+#now are 79 explanatory variables and 1 response variable. still 2930 rows.
+#these 80 variables focus on the quality and quanitity of physical attributes of the houses. Basically what a potential home buyer would want to know about a property.
+#example questions are: size of lot, square feet? when built? number of bedrooms, bathrooms, garage, pool, finished basement? etc. 
+
+```
+
+1. Check data characteristics. Is there missing data? 
+%%Check for missing data! 
+
+In checking for complete rows of data it is surprising to get the result that all 2930 observations have missing data. Upon further analysis of the variables can see that NA which is representing missing fields does not necessarily mean missing data. Can replace appropriate NA's with None or 0 instead to show doesnt have this element. Example being Alley, says NA when House does not have one connecting. For other results that may actually be missing can use mean or median values of remaining. 
+
+```{r}
+
+summary(ames)
+#There are continuous variables related to area dimensions such as total square footage as well as individual measurements of basement, main living area and porch square footages. 
+#There are categorical variables both nominal and ordinal. Have a range of 2 classes for variable Street (gravel or paved) all the way to 28 classes for variable Neighbourhoods. 
+#the summary statistics also give idea of range and/or frequency for each variable. ADD visuals here!!
+
+sum(is.na(ames))
+#are 13960 NA fields, need to look further into this. 
+sum(is.null(ames))
+#0 null fields
+
+missing_values <- ames[!complete.cases(ames),]
+nrow(missing_values)
+#see number of rows that have missing values, is 2930. Meaning all of them so something is going on, will explore further. 
+
+
+```
+
+```{r}
+
+#continued missing values 
+#check which columns have NA's and how many total. Are 25, as seen below which need to be fixed this is a good starting point.
+
+NAcolumns <- names(which(sapply(ames, anyNA)))
+NAcolumns
+
+length(NAcolumns)
+#25 variables with NA's, address each.
+```
+
+
+Besides making sure that the NAs are taken care off, I have also converted character variables into ordinal integers if there is clear ordinality, or into factors if levels are categories without ordinality. I will convert these factors into numeric later on by using one-hot encoding (using the model.matrix function).
+
+---
+Get rid of NA values, convert character variables to intergers if ordinality or to factors if not. Afterwards will work on conversion of these factors (ones with no apparent order to there levels) into numeric variables thorugh one-hot encoding. Usse the model.matrix function.
+
+Goal to go through all columns and convert into numeric or factors so can be converted afterwards. 
+Will replace NA with 0 in numeric fields and 'None' for character variables where appropriate. 
+
+Did each column one by one horizontally across no order, and put result of that variable into proper section to keep track.
+
+---------------------------------------
+Numeric variables replace NA's.
+
+Lot.Frontage
+```{r}
+#potentially all 0's or could actualy be missing values will find out??
+#for all 490 NA's in Lot.Frontage vairbale represent no lot.frontage, so replacing NA's with interger value 0.
+
+ames$Lot.Frontage[is.na(ames$Lot.Frontage)] <- 0
+sum(is.na(ames$Lot.Frontage))
+#no NA's in Lot.Frontage
+summary(ames$Lot.Frontage)
+
+
+```
+
+Garage Cars and Garage Area 
+```{r}
+
+#same 1 entry is NA for both these variables and has no garage. 
+
+sum(is.na(ames$Garage.Cars))
+#1 NA value
+
+ames$Garage.Cars[is.na(ames$Garage.Cars)] <- 0
+#replace Na with most common being 2. 
+
+sum(is.na(ames$Garage.Area))
+#1 NA Value
+ames$Garage.Area[is.na(ames$Garage.Area)] <- 0
+
+#table(ames$Garage.Cars)
+#table(ames$Garage.Cars)
+
+#which(is.na(ames$Garage.Area))
+#line 2237 so could check out.
+
+```
+
+Garage  YrBuilt
+```{r}
+
+sum(is.na(ames$Garage.Yr.Blt))
+#159 NA values with missing years represent properties with no garage built. 
+
+ames$Garage.Yr.Blt[is.na(ames$Garage.Yr.Blt)] <- 0 
+
+#since this variable seems irrelevant as  years span well outside range of sale years. going to replace NA values with 0 to represent no garage built and move on. Can look at later if necessary. 
+
+table(ames$Garage.Yr.Blt)
+
+```
+
+Basement Variables
+```{r}
+
+#NA's for 6 variables below refer to no basement present.
+
+sum(is.na(ames$BsmtFin.SF.1))
+sum(is.na(ames$BsmtFin.SF.2))
+sum(is.na(ames$Bsmt.Unf.SF))
+sum(is.na(ames$Total.Bsmt.SF))
+#these 4 variables have 1 NA value each
+
+ames$BsmtFin.SF.1[is.na(ames$BsmtFin.SF.1)] <-0
+ames$BsmtFin.SF.2[is.na(ames$BsmtFin.SF.2)] <-0
+ames$Bsmt.Unf.SF[is.na(ames$Bsmt.Unf.SF)] <-0
+ames$Total.Bsmt.SF[is.na(ames$Total.Bsmt.SF)] <-0
+
+sum(is.na(ames$Bsmt.Full.Bath))
+sum(is.na(ames$Bsmt.Half.Bath))
+# these 2 have 2 NA values each. 
+
+ames$Bsmt.Full.Bath[is.na(ames$Bsmt.Full.Bath)] <-0
+table(ames$Bsmt.Full.Bath)
+
+#1709 have no basement bathroom, 1181 have 1 full basement bathoom. 
+
+ames$Bsmt.Half.Bath[is.na(ames$Bsmt.Half.Bath)] <-0
+table(ames$Bsmt.Half.Bath) 
+
+#2755 observations have no half basement bathroom. 
+
+
+#removed remaining NA's from these basement variables so are all numeric now. 
+
+```
+
+Masonary Area and Type
+```{r}
+
+sum(is.na(ames$Mas.Vnr.Type))
+#0 NA's
+
+sum(is.na(ames$Mas.Vnr.Area))
+#23 Na's
+
+ames$Mas.Vnr.Area[is.na(ames$Mas.Vnr.Area)] <-0
+#converted NA's to 0 as no area for no masonary area.
+
+```
+
+Utilities and Functional
+```{r}
+sum(is.na(ames$Utilities))
+#no NA values
+table(ames$Utilities)
+#almost 100% are public utilities so variable is not going to be helpful in making a prediction and can get rid of it. 
+
+ames$Utilities <- NULL
+#now 79 explanatory variables
+```
+
+-------------------------------------------------
+Character Variables with ordinal properties to integers. (Both with and withou NA's)
+
+Lot.Shape
+```{r}
+#revalue function from package plyr
+#no NA values, but has order with regular best, followed by IR1 (slightly irregular), IR2 (moderately irregular) and worst being IR3 (irregular). 
+
+#View(ames)
+
+ames$Lot.Shape <- as.integer(revalue(ames$Lot.Shape, c('IR3'=0, 'IR2'=1, 'IR1'=2, 'Reg'=3)))
+
+#now 4 is the best and 0 is the worst for lot shape regularity. 
+```
+
+PoolQuality
+```{r}
+
+#this variable has level ex for excellent, gd for good, ta for typical/average, fa for fair and then NA for no pool so need to replace NA with no pool. 
+#has highest number of NA's. May be explained as a pool can be seen as a luxury feature.
+
+Ratings <- c('None' = 0, 'Po' = 1, 'Fa' = 2, 'TA' = 3, 'Gd' = 4, 'Ex' = 5)
+#create vector with quality ratings as this is seen across multiple variables. 
+
+
+ames$Pool.QC[is.na(ames$Pool.QC)] <- 'None'
+ames$Pool.QC <- as.integer(revalue(ames$Pool.QC, Ratings))
+table(ames$Pool.QC)
+
+#Now 5 is excellent all the way to 0 is for None. 
+```
+
+Kitchen Variables
+```{r}
+sum(is.na(ames$Kitchen.Qual))
+ames$Kitchen.Qual<-as.integer(revalue(ames$Kitchen.Qual, Ratings))
+table(ames$Kitchen.Qual)
+
+sum(is.na(ames$Kitchen.AbvGr))
+table(ames$Kitchen.AbvGr)
+
+```
+
+Fireplace Quality
+```{r}
+
+sum(is.na(ames$Fireplace.Qu))
+#there are 1422 NA values in Fireplace.Qu
+
+ames$Fireplace.Qu[is.na(ames$Fireplace.Qu)] <- 'None'
+ames$Fireplace.Qu <- as.integer(revalue(ames$Fireplace.Qu, Ratings))
+#same quality rating scale as pool quality.
+table(ames$Fireplace.Qu)
+
+#5 is for excellent adn 0 is for none. 
+
+table(ames$Fireplaces)
+#range from 0 to 4. most 0 or 1, 1422 or 1274. 
+```
+
+Garage Quality
+```{r}
+
+ames$Garage.Qual[is.na(ames$Garage.Qual)] <- 'None'
+ames$Garage.Qual<-as.integer(revalue(ames$Garage.Qual, Ratings))
+table(ames$Garage.Qual)
+
+#5 is for excellent adn 0 is for none.
+#3 for TA meaning typical or average is most popular by big proportion. 
+
+```
+
+Garage.Condition
+```{r}
+
+ames$Garage.Cond[is.na(ames$Garage.Cond)] <- 'None'
+ames$Garage.Cond <- as.integer(revalue(ames$Garage.Cond, Ratings))
+table(ames$Garage.Cond)
+
+#3 for TA meaning typical or average is most popular by big proportion. 
+```
+
+Garage Finish
+```{r}
+# is ordinal with order of finished, rough finish, unfinished and no garage. 
+
+ames$Garage.Finish[is.na(ames$Garage.Finish)] <- 'None'
+#replace NA's with none for no garage. 
+
+Finish <- c('None'=0, 'Unf'=1, 'RFn'=2, 'Fin'=3)
+#create vector with ratings.
+
+ames$Garage.Finish <- as.integer(revalue(ames$Garage.Finish, Finish))
+table(ames$Garage.Finish)
+
+#now Garage.Finish have 3 for finished to 1 unfinished garage and 0 no garage. 
+#unfinished most popular, with rough second.
+
+```
+
+Basement Variables (Run 3 times may have to double run to make sure all NA's taken care of)
+```{r}
+
+sum(is.na(ames$Bsmt.Qual))
+sum(is.na(ames$Bsmt.Cond))
+sum(is.na(ames$Bsmt.Exposure))
+sum(is.na(ames$BsmtFin.Type.1))
+sum(is.na(ames$BsmtFin.Type.2))
+#these 5 variables have 79 NA values each
+#factorize using ratings vector /hot encode
+
+ames$Bsmt.Qual[is.na(ames$Bsmt.Qual)] <- 'None'
+ames$Bsmt.Qual<-as.integer(revalue(ames$Bsmt.Qual, Ratings))
+table(ames$Bsmt.Qual)
+
+#most common Basement Quality is between 3 and 4, so Typical and Good. 
+
+ames$Bsmt.Cond[is.na(ames$Bsmt.Cond)] <- 'None'
+ames$Bsmt.Cond<-as.integer(revalue(ames$Bsmt.Cond, Ratings))
+table(ames$Bsmt.Cond)
+
+#most common is Basement Condition is 3 for typical/average.
+
+ames$Bsmt.Exposure[is.na(ames$Bsmt.Exposure)] <- 'None'
+Exposure <- c('None'=0, 'No'=1, 'Mn'=2, 'Av'=3, 'Gd'=4)
+# create vector for exposure
+
+ames$Bsmt.Exposure<-as.integer(revalue(ames$Bsmt.Exposure, Exposure))
+table(ames$Bsmt.Exposure)
+
+#most common is Basement exposure is no exposure.
+
+ames$BsmtFin.Type.1[is.na(ames$BsmtFin.Type.1)] <- 'None'
+FinishType <- c('None'=0, 'Unf'=1, 'LwQ'=2, 'Rec'=3, 'BLQ'=4, 'ALQ'=5, 'GLQ'=6)
+#create vector
+ames$BsmtFin.Type.1 <-as.integer(revalue(ames$BsmtFin.Type.1, FinishType))
+table(ames$BsmtFin.Type.1)
+
+sum(is.na(ames$BsmtFin.Type.1))
+
+#spread out. 
+
+ames$BsmtFin.Type.2[is.na(ames$BsmtFin.Type.2)] <- 'None'
+FinishType <- c('None'=0, 'Unf'=1, 'LwQ'=2, 'Rec'=3, 'BLQ'=4, 'ALQ'=5, 'GLQ'=6)
+#create vector
+ames$BsmtFin.Type.2 <-as.integer(revalue(ames$BsmtFin.Type.2, FinishType))
+table(ames$BsmtFin.Type.2)
+
+#most common is unfinished. 
+```
+
+Functional
+```{r}
+sum(is.na(ames$Functional))
+#no NA values
+
+#ordinal so convert to numeric with typical being best at 7 and salvage worst at 0. 
+
+scale <- c('Sal'=0, 'Sev'=1, 'Maj2'=2, 'Maj1'=3, 'Mod'=4, 'Min2'=5, 'Min1'=6, 'Typ'=7)
+#create vector
+ames$Functional <- as.integer(revalue(ames$Functional, scale))
+table(ames$Functional)
+
+#vast majority are typical with score 7 so no not very relevant variable for prediction. 
+```
+
+Exterior Variables Quality and Condition
+```{r}
+
+#No NA's can convert using ratings of qualties vector
+
+ames$Exter.Qual<-as.integer(revalue(ames$Exter.Qual, Ratings))
+table(ames$Exter.Qual)
+
+#3 is most common for typical or average quality
+
+ames$Exter.Cond<-as.integer(revalue(ames$Exter.Cond, Ratings))
+table(ames$Exter.Cond)
+
+#3 is most common with typical or average quality of exterior condition. (2549).
+```
+
+---------------------------------------
+Character variables to factors becasue no ordinality
+
+Alley
+```{r}
+
+sum(is.na(ames$Alley))
+#there are 2732 NA values in the Alley variable. They represent no alley so will replace NA with 'NONE' and turn into a factor because categories are not ordinal.
+
+ames$Alley[is.na(ames$Alley)] <- 'None'
+ames$Alley <- as.factor(ames$Alley)
+table(ames$Alley)
+
+#now Alley is a factor with 3 levels.
+```
+
+Lot.Configuration
+```{r}
+
+#no NA values, levels include inside lot, corner lot, cul-de-sac, frontage on 2 sides of property and frontage on 3 so no apparent ordinality. Convert to factor. 
+
+ames$Lot.Config <- as.factor(ames$Lot.Config)
+table(ames$Lot.Config)
+
+#factor with 5 levels now.
+
+```
+
+MS.Zoning
+```{r}
+
+#MS.Zoning variable has no NA values and is not ordinal so turn to factor.
+
+ames$MS.Zoning <- as.factor(ames$MS.Zoning)
+table(ames$MS.Zoning)
+
+#MS.Zoning is now a factor with 7 levels. 
+
+```
+
+Misc.Features
+```{r}
+
+sum(is.na(ames$Misc.Feature))
+#there are 2824 Null values for Miscellaneous Feature variable. Convert to factor as no ordinality.
+
+ames$Misc.Feature[is.na(ames$Misc.Feature)] <- 'None'
+#None means no miscellaneous features for this property.
+ames$Misc.Feature <- as.factor(ames$Misc.Feature)
+table(ames$Misc.Feature)
+
+#High proportion of homes dont have these features which makes this variable almost irrelevant. Only 1 has an elevator or a tennis court so these features cannot significantly provide insight into a final sale price even if we'd assume they'd increase the price. 
+
+#now Misc.Feature is a factor with 6 levels.
+```
+
+Fence
+```{r}
+
+sum(is.na(ames$Fence))
+#There are 2358 NA values for this variable a high amount meaning no fence, so will replace with 'none'.
+#Some order but not enough so convert to factor.
+
+ames$Fence[is.na(ames$Fence)] <- 'None'
+ames$Fence <- as.factor(ames$Fence)
+table(ames$Fence)
+
+#now Fence is a factor with 4 levels. 
+```
+
+GarageType
+```{r}
+
+ames$Garage.Type[is.na(ames$Garage.Type)] <- 'None'
+ames$Garage.Type <- as.factor(ames$Garage.Type)
+table(ames$Garage.Type)
+
+#now is factor with 7 levels
+```
+
+Electrical
+```{r}
+
+sum(is.na(ames$Electrical))
+ames$Electrical <- as.factor(ames$Electrical)
+table(ames$Electrical)
+
+#factor with 5 levels
+```
+
+Exterior Variables 1st and 2nd
+```{r}
+ames$Exterior.1st <- as.factor(ames$Exterior.1st)
+#table(ames$Exterior.1st)
+
+#factor with 16 levels. categories that are not ordinal.
+
+ames$Exterior.2nd <- as.factor(ames$Exterior.2nd)
+#table(ames$Exterior.2nd)
+
+#factor with 16 levels. categories that are not ordinal.
+
+```
+
+Sale Type
+```{r}
+ames$Sale.Type <- as.factor(ames$Sale.Type)
+table(ames$Sale.Type)
+
+# factor with 10 levels.
+
+```
+
+Sale Condition
+```{r}
+
+#values are categorical, no NA's
+
+ames$Sale.Condition <- as.factor(ames$Sale.Condition)
+table(ames$Sale.Condition)
+
+#2413 sales are normal, large proportion and thinking to just use this.
+
+#to not complicate results going to focus on variable Sale.Condition that is 'normal'. The other 5 classes here are 1) Abnormal such as trade, foreclosure, or short sale 2) Adjoing land purchase, 3)allocation meaning two linked properities, such as condo and garage unit 4)sale between family members and 5) partial when new home was not complete yet. So in summary a normal sale would represent a more common typical transaction of a home. 
+
+#Eliminate any bonus or discounts potentially present in abnormal sales that is beyond scope of data.
+
+#this was dealt with later on thorugh hot-encoding. 
+
+```
+
+---
+Convert Numeric Variable into factors!
+
+MS.SubClass
+```{r}
+
+#type of property in sale through reference number.
+#convert to factor
+
+ames$MS.SubClass <- as.factor(ames$MS.SubClass)
+table(ames$MS.SubClass)
+
+#now MS.SubClass is a factor with 16 levels
+```
+
+Month Sold
+```{r}
+
+ames$Mo.Sold <- as.factor(ames$Mo.Sold)
+table(ames$Mo.Sold)
+
+#now Mo.Sold is factor with 12 levels. (January to December)
+#Could indicate seasonality. Summer months have high totals and begining and end of year seem to be slower months.
+
+```
+
+Year Sold
+```{r}
+
+ames$Yr.Sold <- as.factor(ames$Yr.Sold)
+table(ames$Yr.Sold)
+
+#Yr. Sold variable is a factor now with 5 levels representing the years 2006 to 2010. 
+
+```
+
+
+done converting all missing values, clean up rest of variables now then can do a little feature engineering before preparing data for model. 
+----
+
+Re-Run after running bathroom variables 3 times to eliminate all Na's (13)...may also have to rerun garage qualoty, finish and condition to make sure NA's taken care of. (4)
+```{r}
+#check NA's left and can see 0 NA's left so missing values are dealt with. 
+
+sum(is.na(ames))
+
+# check structure to make sure no character variables left. Have some so will continue converting to factors
+str(ames)
+
+Remaining_CharVar <- names(ames[,sapply(ames, is.character)])
+Remaining_CharVar
+
+length(Remaining_CharVar)
+#16 character variables left to factorize.
+```
+
+Remainingg 16 Character Varaibles convert to ordinal integers or to factors
+```{r}
+#1 - Foundation
+ames$Foundation <- as.factor(ames$Foundation)
+table(ames$Foundation)
+#factor with 6 levels, most common CBlock and PConc
+
+#2 - Heating
+ames$Heating <- as.factor(ames$Heating)
+table(ames$Heating)
+#factor with 6 levels, most common GasA
+
+#3 - Heating Quality
+ames$Heating.QC <-as.integer(revalue(ames$Heating.QC, Ratings))
+table(ames$Heating.QC)
+#most common is 5 for excellent heating quality. (1495)
+
+#4 - Central Air
+ames$Central.Air<-as.integer(revalue(ames$Central.Air, c('N'=0, 'Y'=1)))
+table(ames$Central.Air)
+#yes 2734 of the time so majority have central air.
+
+#5 - RoofStyle
+ames$Roof.Style <- as.factor(ames$Roof.Style)
+table(ames$Roof.Style)
+#factor with 6 levels, most common Gable (2321)
+
+#6 - Roof Material
+ames$Roof.Matl <- as.factor(ames$Roof.Matl)
+table(ames$Roof.Matl)
+#factor with 8 levels, most common CompShg (2887)
+
+#7 - Land Contour
+ames$Land.Contour <- as.factor(ames$Land.Contour)
+table(ames$Land.Contour)
+# factor with 4 levels, most common Lvl (2633)
+
+#8 - Land Slope
+ames$Land.Slope<-as.integer(revalue(ames$Land.Slope, c('Sev'=0, 'Mod'=1, 'Gtl'=2)))
+table(ames$Land.Slope)
+# Gt1 is most common, 2789
+
+#9 - Building Type
+ames$Bldg.Type <- as.factor(ames$Bldg.Type)
+table(ames$Bldg.Type)
+#factor with 5 levels, most common 1Fam 2425
+
+#10 - House Style
+ames$House.Style <- as.factor(ames$House.Style)
+table(ames$House.Style)
+#factor with 8 levels, most common 1 story 1481
+
+#11 - Neighborhood
+ames$Neighborhood <- as.factor(ames$Neighborhood)
+table(ames$Neighborhood)
+#factor with 28 levels, 
+
+#12 - Condition1
+ames$Condition.1 <- as.factor(ames$Condition.1)
+table(ames$Condition.1)
+#factor with 9 levels, common is Norm with 2522
+
+#13 - Condition2
+ames$Condition.2 <- as.factor(ames$Condition.2)
+table(ames$Condition.2)
+#factor with 8 levels, Norm most 2900
+
+#14 - Street
+ames$Street<-as.integer(revalue(ames$Street, c('Grvl'=0, 'Pave'=1)))
+table(ames$Street)
+#Paved most commmon 2918 of the time.
+
+#15 -Paved Drive
+ames$Paved.Drive<-as.integer(revalue(ames$Paved.Drive, c('N'=0, 'P'=1, 'Y'=2)))
+table(ames$Paved.Drive)
+#Yes paved drive most common 2652
+
+#16 - Mas.Var.Type
+ames$Mas.Vnr.Type <- as.factor(ames$Mas.Vnr.Type)
+table(ames$Mas.Vnr.Type)
+#most common is none at 1752, factor with 6 levels.
+
+#all ran smoothly and now no character variables left all are numeric or factor. For the factor will convert with one hot encoding afterwards. 
+```
+
+```{r}
+
+str(ames)
+
+Numeric_variables <- which(sapply(ames, is.numeric))
+Factor_Variables <- which(sapply(ames, is.factor))
+length(Numeric_variables)
+length(Factor_Variables)
+#have 2930 observations of 79 variables with no NA values. 
+#Have 54 numeric variables and have 25 factors. This includes SalePrice. 
+```
+----------------------
+IMPORTANT:Explore Response Variable - ADD in visuals for FINAL REPORT** skewed to right, log final sale price or normalize it. 
+ALSO 2. What is the correlation between the attributes other than SalePrice? 
+```{r}
+
+summary(ames$SalePrice)
+#table(ames$SalePrice) - gives amount of each houses sold at each price, too many to be useful, could look at ranges.
+mean(ames$SalePrice)
+#180786, which is above the median
+boxplot(ames$SalePrice)
+#TALK about this median price of home is 160000 with max being 755000 and min 12790
+
+
+SalePrice_Numbers_NotNormalized <- ames$SalePrice
+#keep for later, if want to compare
+#reverse_normalized_value = normalized_value * (max(x) - min(x)) + min(x)
+
+hist(ames$SalePrice)
+#quick histogram shows that the sale prices are right skewed. A logicial explanation for this is that fewer people can afford more expensive homes. This is something to keep in mind and potentially look at houses under the value of 400,000. **
+
+
+
+
+
+
+```
+
+1st look at numeric variables relation to sale price. 
+```{r}
+
+numericV <- which(sapply(ames, is.numeric)) #vector with numeric variables
+length(numericV)
+#there are 37 numeric variables
+
+frame_numericV <- ames[,numericV]
+cor_numericV <- cor(frame_numericV, use = "pairwise.complete.obs") 
+#correlation of all 37 numeric variables
+
+Ranked_cor_numericV <- as.matrix(sort(cor_numericV[,'SalePrice'], decreasing = TRUE))
+#gives correlations in decreasing strength
+
+top_cor_numericV <- names(which(apply(Ranked_cor_numericV, 1, function(x) abs(x)>0.5))) 
+#top correlations above 0.5 or -0.5. 
+
+cor_numericV <- cor_numericV[top_cor_numericV,top_cor_numericV]
+
+corrplot.mixed(cor_numericV, tl.col = 'blue', tl.pos = 'lt')
+#in visual can see numeric attributes with highest correlation to SalePrice as Overall Quality, Ground Living Area and Garage Cars. 
+```
+
+```{r}
+par(mfrow=c(2,2))
+#use to plot 4 main correlations from above
+
+plot(ames$Overall.Qual, ames$SalePrice)
+plot(ames$Garage.Area, ames$Garage.Cars)
+plot(ames$X1st.Flr.SF, ames$Total.Bsmt.SF)
+plot(ames$Garage.Yr.Blt, ames$Year.Built)
+
+#this shows a visual of directionality. All strong positive correlations above 0.8. Collinearity is an issue from multiple variables provide similiar degree of predictive value. 
+
+##add to this section!!
+#Graph the frequency distribution of saleprice.
+hist(ames$SalePrice, col = 'red', main = "Frequency Distribution of Sale Price")
+#visual of histogram
+split3 <- cut(ames$SalePrice, 3, labels=c("Low","Medium","High"))
+plot(split3)
+#quick visual to look at high sale prices which are skewing data. 
+```
+
+```{r}
+chart.Correlation(cor_numericV, histogram=TRUE, pch=19)
+#installed "PerformanceAnalytics" package to use chart.Correlation
+#Another way to visual the correlation between variables.
+
+#?? useful? not really
+
+```
+
+```{r}
+#Look at strong correlations with SalePrice. 
+
+boxplot(ames$SalePrice~ames$Overall.Qual)
+boxplot(ames$SalePrice~ames$Gr.Liv.Area)
+densityplot(ames$SalePrice~ames$Garage.Cars)
+scatter.hist(ames$SalePrice,ames$Gr.Liv.Area) #cool
+scatter.hist(ames$Overall.Qual,ames$SalePrice) #great visual..try on new variables created
+
+#low score could explain low price so be dangerous to remove outliers here
+# can think remove gr living area above 4000, just outliers of really big homes proportionate to rest of houses. 
+#fix up with header, x and y label and ranges...main point is to show outliers or 
+
+
+#add in boxplots on new variables or density plots.
+
+#need all numeric to look at correlation
+```
+---------------------
+Quick look at correlation of numeric variables with at least 0.5 absolute to SalePrice. 
+```{r}
+
+frame_numericV <- ames[,Numeric_variables]
+cor_numericV <- cor(frame_numericV, use = "pairwise.complete.obs") 
+#correlation of all 54 numeric variables
+
+Ranked_cor_numericV <- as.matrix(sort(cor_numericV[,'SalePrice'], decreasing = TRUE))
+#gives correlations in decreasing strength
+
+top_cor_numericV <- names(which(apply(Ranked_cor_numericV, 1, function(x) abs(x)>0.5))) 
+#top correlations above 0.5 or -0.5. 
+
+cor_numericV <- cor_numericV[top_cor_numericV,top_cor_numericV]
+
+corrplot.mixed(cor_numericV, tl.col = 'blue', tl.pos = 'lt')
+
+#A full 16 numeric variables above 0.5 correlation with SalePrice.
+
+```
+
+---------------------
+----------------------
+Feature Engineering
+
+Total Square Feet
+```{r}
+
+#add new variable that includes the total ground living area and total basement square footage. 
+ames$Total.Sq.Feet <- ames$Gr.Liv.Area + ames$Total.Bsmt.SF
+
+cor(ames$SalePrice, ames$Total.Sq.Feet, use= "pairwise.complete.obs")
+#correlation of new attribute is strong at 0.79.
+
+plot(ames$SalePrice ~ ames$Total.Sq.Feet)
+#can see some outliers potential to remove
+
+#rows with total square feet over 6000 are 6 cases: 1499, 1761, 1768, 1773, 2181, 2182
+
+cor(ames$SalePrice[-c(1499, 1761, 1768, 1773, 2181, 2182)], ames$Total.Sq.Feet[-c(1499, 1761, 1768, 1773, 2181, 2182)], use= "pairwise.complete.obs")
+#remove outliers by excluding total square footage over 6000 because over 99% of the observations are below this threshold. (2924/2930 = 0.998). This gets rid of those properties with abnormally large square footages compared to rest of the observations. 
+
+#By removing these outliers correlation goes up to 0.82. A 4 percent increase by removing 6 cases. 
+
+
+#possible visual to add, *Total square footage (new vairable of ground and basement) to salprice..plot this fitted line...Scatterplot of Sale Price versus Total Home Area by Sale Condition (Ames Data)
+```
+
+Total Bathrooms
+```{r}
+
+#combine the 4 bathroom variables, awarding half baths as 0.5 and full as 1.
+
+ames$Total.Bathrooms <- ames$Full.Bath + (ames$Half.Bath*0.5) + ames$Bsmt.Full.Bath + (ames$Bsmt.Half.Bath*0.5)
+
+cor(ames$SalePrice, ames$Total.Bathrooms, use= "pairwise.complete.obs")
+#gives a positive correlation of 0.63. 
+
+plot(ames$Total.Bathrooms, ames$SalePrice)
+
+#shows more total bathrooms has a relationship with higher sale price. 
+```
+
+
+Additional Feature?
+```{r}
+
+```
+
+
+-------------------------
+Prepare Data For Modeling
+
+1. Remove Highly Correlated Variables and Attributes that do not provide a lot of information.
+```{r}
+
+dim(ames)
+#2930 and 81
+
+#When correlation is high between two columns only one is kept, that being the one with the higher correlation to SalePrice is kept. 
+
+cor_numericV
+#see all variables correlations to eachother, two variables higher that 0.7 look to drop one. 
+##multivariate analysis like correlation all variables numeric.
+
+#Example include Total.Sq.Feet and Gr.Live.Area which have a 0.87 correlation, drop Gr.Live.Area because it has lower correlation to SalePrice and keep Total.Sq.Feet (0.79 vs 0.71).
+#Drop Total.Bsmt.SF and keep Total.Sq.Feet (have 0.82 correlation to eachotehr, and 0.63 and 0.79 correlation to SalePrice respectively)
+#Drop Garage.Area and keep Garage.Cars have 0.89 correlation to eachother, and to SalePrice 0.65 and 0.64. 
+#Also can drop:
+#Drop Full Bathroom and keep Total Bathroom have 0.71 correlation to eachother, and 0.64 and 0.55 to SalePrice.
+#Drop Exterior Quality and keep Overall Quality. 0.73. and then to SalePrice 0.69 and 0.8. 
+
+
+#Summary of above is to drop Gr.Live.Area, Total.Bsmt.SF, Garage.Area, Full.Bathroom and Exterior.Quality.
+
+ames$Gr.Liv.Area <- NULL
+ames$Total.Bsmt.SF <- NULL
+ames$Garage.Area <- NULL
+ames$Full.Bath <- NULL
+ames$Exter.Qual <- NULL
+
+#now down 5 variables to 76, includes 2 created and response variable. 
+
+
+```
+
+1.b No additionl information, not very useful attributes for predictions.
+```{r}
+#Examples of variables that would not be useful in making predictions because an extremely large proportion of observations are the same include: 
+#visualize with boxplots, histogram to represent visual of continous variables or density plot
+
+summary(ames)
+
+#More than 85% of all responses are the same going to drop! thats 2490 out of 2930. This threshold would deem variables not as useful for accurate predictions.
+
+
+#Dropable include: Alley (2732 are none), Street (most 1),Land.Contour (2633 are level) Paved.Drive (most 2), Utilities(Allpublic removed earlier), Land.Slope (most are 2), Condition.1 (2522 are Norm), Condition.2 (2900 are norm), Central.Air (most are 1), Heating (2885 are GasA), Roof.Matl (2887 are CompShg), Bsmt.Fin.Type.1 (most 0) and Bsmt.Fin.Type.2 (most unfinished),Electrical (2682 are Sbrkr), Functional (most at 7), Misc.Feature (2824 are none), SaleType (2536 are WD), Pool Quality and Pool.Area (most dont have a pool).
+
+ames$Alley <- NULL
+ames$Street <- NULL
+ames$Land.Contour <- NULL
+ames$Paved.Drive <- NULL
+#ames$Utilities <- NULL
+ames$Land.Slope <- NULL
+ames$Condition.1 <- NULL
+ames$Condition.2 <- NULL
+ames$Central.Air <- NULL
+ames$Heating <- NULL
+ames$Roof.Matl <- NULL
+ames$BsmtFin.Type.1 <- NULL
+ames$BsmtFin.Type.2 <- NULL
+ames$Electrical <- NULL
+ames$Functional <- NULL
+ames$Sale.Type <- NULL
+ames$Pool.Area <- NULL
+ames$Pool.QC <- NULL
+ames$Misc.Feature <- NULL
+
+#18 more varaibles to removew that dont provide additional information.
+
+#From 76 down to 58 Variables.
+
+```
+
+2. Outliers
+```{r}
+
+#Remove Total.Sq.Feet over 6000.
+cor(ames$SalePrice[-c(1499, 1761, 1768, 1773, 2181, 2182)], ames$Total.Sq.Feet[-c(1499, 1761, 1768, 1773, 2181, 2182)], use= "pairwise.complete.obs")
+#remove outliers by excluding total square footage over 6000 because over 99% of the observations are below this threshold. (2924/2930 = 0.998). This gets rid of those properties with abnormally large square footages compared to rest of the observations. 
+
+#By removing these outliers correlation goes up to 0.82. A 4 percent increase by removing 6 cases.
+
+```
+
+3. Split into Numeric and Factor dataframes and scale //Normalize numeric variables
+```{r}
+
+dim(ames)
+#latest dimensions are 2930 observations and 58 variables
+
+new_Numeric_variables <- which(sapply(ames, is.numeric))
+length(new_Numeric_variables)
+#There are currently 42 numeric variables. 
+
+new_factor_variables <- which(sapply(ames, is.factor))
+length(new_factor_variables)
+#There are 16 factor variables.
+
+
+#To look at the distribution we look at the measure skewness, as a symmetrical dataset will have a skew of 0. To combat skewness and keep in range -1 to 1 going to log the numeric variables an absolute skew . Potentially log SalePrice to address skewness. 
+#Seperate ames into data.frame for new_numeric_variables the 42. 
+
+frame_new_numericV <- ames[,new_Numeric_variables]
+#2930obs of 42 numeric variables.
+
+normalize <- function(x) {return ((x - min(x)) / (max(x) - min(x))) }
+
+numericV_normalized <- as.data.frame(lapply(frame_new_numericV, normalize))
+summary(numericV_normalized)
+#normalized between 0 and 1. 
+
+summary(new_Numeric_variables)
+#original data set for comparision.
+
+#View(numericV_normalized)
+
+```
+
+4. One hot encoding 16 factors.  
+```{r}
+
+#for machine learning going to need to complete turning all to numeric. One hot encode is for categorical variables with no ordinality will be represented by 1's and 0's to show if exist. Going to try to use model.matrix function to expand factors to create dummy variables.
+
+frame_new_factorV <- ames[,new_factor_variables]
+#View(frame_new_factorV) to see data frame of 16 factor variables.
+
+df.dummies <- as.data.frame(model.matrix(~.-1, frame_new_factorV))
+dim(df.dummies)
+#Dimensions of factor dummyvariables is 2930 by 140
+#View(df.dummies)
+#zeros and 1's. 
+
+#remove some of these new variables with little or no variance
+under440ones <- which(colSums(df.dummies[1:nrow(ames[!is.na(ames$SalePrice),]),])<440)
+colnames(df.dummies[under440ones])
+#Under 440 ones that is 15% of the 2930 observation and stays with if 85% or more of a variable is one response its predictive power is not very useful in this small sample size so can be removed as two few observations.
+
+#Thus there are 112 variables that can be removed. 
+df.dummies1 <- df.dummies[,-under440ones] 
+dim(df.dummies1)
+#Final dimensions of hot encoded categorical variables is 2930 observations of 28 variables. 
+
+#View(df.dummies1)
+
+df.dummies_normalized <- as.data.frame(lapply(df.dummies1, normalize))
+summary(df.dummies_normalized)
+#Not much change but wanted it to be similiar across both being normalized.
+
+```
+
+
+4.b Combine dataframes into one all now numeric.  
+
+```{r}
+dim(numericV_normalized)    #42
+
+dim(df.dummies_normalized)   #28
+
+complete <- cbind(numericV_normalized, df.dummies_normalized)
+dim(complete)
+#2930 obsverations and 70 variables. Normalized. 
+
+
+```
+
+4.c Narrow down observations to a normal sale condition and look at typical sale of a home with a basement and garage. Representing an typical persons experience in buying a home and seeking one with a basement and garage at the bare minimum. 
+
+```{r}
+
+#Want to look at only sales that are normal not abnormal (Sale.Condition) and of homes that have a basement. Bsmt.Cond is 0 means no basement and same with Garage.Cond being 0 means no garage. 
+
+table(complete$Sale.ConditionNormal)
+#2413 are Normal
+
+#To not complicate results going to focus on variable Sale.Condition that is 'normal'. The other 5 classes here are 1) Abnormal such as trade, foreclosure, or short sale 2) Adjoing land purchase, 3)allocation meaning two linked properities, such as condo and garage unit 4)sale between family members and 5) partial when new home was not complete yet. So in summary a normal sale would represent a more common typical transaction of a home. 
+#Eliminate any bonus or discounts potentially present in abnormal sales that is beyond scope of data.
+
+#Going to only look at rows where Sale.ConditionNormal is equal to 1. (2413 and other 517 will be removed.)
+
+complete1 <- complete[!(complete$Sale.ConditionNormal ==0),]
+dim(complete1)
+#now 2413 observations
+
+
+#thinking: d<-d[!(d$A=="B" & d$E==0),]
+
+table(complete1$Bsmt.Cond)
+#67 homes don't have basement, complete frame had 80 such rows.
+#remove these 67 rows.
+
+complete2 <- complete1[!(complete1$Bsmt.Cond ==0),]
+dim(complete2)
+#now 2346 observations
+
+
+table(complete2$Garage.Cond)
+#145 homes have no garage, original complete frame had 159 homes with no Garage
+#remove these 145 rows.
+
+complete3 <- complete2[!(complete2$Garage.Cond ==0),]
+dim(complete3)
+#2240 observations remain form original 2930.
+
+
+#looking at 2240/2930 = 76% of observations met the criteria of being a normal sale, having a basement and having a garage. Now will try to see which predictor variables yield the most accuacy in predicting sale prices for this scenario. 
+
+```
+
+
+
+5. Compose Train and Test Sets
+```{r}
+
+#str(complete3)  #all numerical and normalized, 2240 by 70. 
+set.seed(100)
+complete4 <- sample(nrow(complete3), floor(nrow(complete3)*0.7))
+train <- complete3[complete4,]
+#1568 obs of 70 variables
+test <- complete3[-complete4,]
+#672 observations of 70 variables
+
+
+#test to make sure all data was divided into 2 groups. And this is true.
+nrow(complete3) == (nrow(train) + nrow(test))
+#split data into training and test by 70/30.
+
+
+```
+
+--------------------------------
+MODELING
+---------------------------------
+
+```{r}
+
+#start with a regression model will all of it. 
+
+first_model <- lm(SalePrice ~ ., data = train)
+summary(first_model)
+
+#R squared around 0.9054 is not that bad. Variation in the outcome explained by model. OVERFITTING??
+#RMSE is our outcome of interest.
+#first_model has a low P value and high r^2 value combination so my regression model may have significant variables). 
+
+prediction <- predict(first_model, test, type = 'response')
+model_output <- cbind(test, prediction)
+
+install.packages('Metrics')
+library(Metrics)
+
+rmse(complete3$SalePrice,model_output)
+#gives value of 0.418718.
+
+
+#model_output$log_prediction <- log(model_output$prediction)
+#model_output$log_SalePrice <- log(model_output$SalePrice)
+
+#install.packages('Metrics')
+#library(Metrics)
+
+#rmse(model_output$log_SalePrice, model_output$log_prediction)
+
+#value of 0.1512277
+#this value of root mean standard error is based off residuals (prediction errors) and how far from the regression line data points are. Summed up its means how close together data is too the line of best fit.
+#low is good, model fits in predicting response variable. 
+
+#error of "prediction from a rank deficient fit may be misleading for RMSE."
+```
+
+```{r}
+#anova(first_model)
+```
+Rsquared:
+0% represents a model that does not explain any of the variation in the response variable around its mean. The mean of the dependent variable predicts the dependent variable as well as the regression model.
+100% represents a model that explains all of the variation in the response variable around its mean.
+
+A high R2 is necessary for precise predictions, but more to it.
+
+#check residual plots: Non-random residual patterns indicate a bad fit despite a high R2
+
+#overfitting?
+
+rmse computes the root mean squared error between two numeric vectors
+RMSE of test > RMSE of train => OVER FITTING of the data.
+RMSE of test < RMSE of train => UNDER FITTING of the data.
+
+
+----------------
+
+
+
+AFTER FIRST MODEL - build a second more precise model. 
+
+-------------
+```{r}
+#Look at SalePrice response variable
+
+hist(complete3$SalePrice)
+#still skewed right, should remove observations where homes are above 400,000...the 85% range of homes to keep consistent
+
+#skewness still a problem so going to reduce observations. Keep SalePrices within an 85% range from the mean price...help normalize. 
+
+summary(ames$SalePrice)
+#Mean is 180800, to upper range to keep would be 180800 + 0.85*(755000-180800) = 668870. (488070)and the lower range would be 180800 - 0.85*(180800-12790) = 37.991.5 (142808.5).
+
+summary(complete3$SalePrice)
+#translates for normalized data to mean being 0.22630. So upper range to keep is 0.2263 + (1-0.2263)*0.85 = 0.8812 (0.6576) and lower range is 0.2263 - (0.2263-0.02993)*0.85 = 0.0594 (0.16686)
+
+#keep middel 85% of sale prices, remove fairly top 7.5 and bottom 7.5 percent of sales.
+#remove 3 low and 1 high observation. 
+
+#So to narrow down observations eliminate rows
+
+dim(complete3)
+
+new_data <- complete3[(!(complete3$SalePrice == 1) & !(complete3$SalePrice < 0.059)),]
+dim(new_data)
+#2236 by 70
+```
+```{r}
+###******# going to remove values over the 99th percentile in my data frame for SalePrice
+quantile(complete$SalePrice, 0.95)
+#anything above 0.434 so roughly over 0.6.
+
+new_95percentile <- complete3[complete3$SalePrice < quantile(complete3$SalePrice, 0.95), ]
+dim(new_95percentile)
+#2128 by 70 so removed 112 cases. 
+hist(new_95percentile$SalePrice)
+
+###  Normality Testing  IMPORTANT USE IN REPORT
+
+skew(complete3$SalePrice)
+#1.811 skewed to right, greater than one so 
+skew(new_95percentile$SalePrice)
+#new skewness is 0.63 so now it is only moderately skewed and a lot closer to approximately symmetrical than it was before. 
+
+
+
+````
+
+FEATURE SELECTION
+RE-LOOKED at correlation (pearson for continous variables)
+```{r}
+
+cor_70_numericV <- cor(new_95percentile, use = "pairwise.complete.obs", method = 'pearson') 
+#correlation of all 54 numeric variables
+
+Ranked_cor_70_numericV <- as.matrix(sort(cor_70_numericV[,'SalePrice'], decreasing = TRUE))
+#gives correlations in decreasing strength
+
+top_cor_70_numericV <- names(which(apply(Ranked_cor_70_numericV, 1, function(x) abs(x)>0.5))) 
+#top correlations above 0.5 or -0.5. 
+
+cor_70_numericV <- cor_70_numericV[top_cor_70_numericV,top_cor_70_numericV]
+
+corrplot.mixed(cor_70_numericV, tl.col = 'blue', tl.pos = 'lt')
+
+
+#now have 11 variables correlated to Sale Price above 0.5 threshold.
+
+```
+
+
+Re-remove highly correlated variables --new dimensions 2128 by 67
+```{r}
+
+#Above 0.8 would be GarageYearBuilt and YearBuilt at 0.82. Drop Garage Year Built since Year Built has higher correlation to Sale Price (0.56 vs 0.52)
+
+new_95percentile$Garage.Yr.Blt <- NULL
+
+#Also remove varaibles over 0.7 correlated to eacother still pretty high so 2 more.
+
+#Correlated at 0.75 is X1stfloor and TotalSqFeet, remove Xl1stFloor as lower. (0.78 vs 0.56).
+#Correlated at 0.71 is YearBuilt and Basement Quality, remove Year Built (0.59 vs 0.56).
+
+new_95percentile$X1st.Flr.SF <- NULL
+new_95percentile$Year.Built <- NULL
+
+dim(new_95percentile)
+#2128 by 67
+
+```
+
+```{r}
+
+cor_67_numericV <- cor(new_95percentile, use = "pairwise.complete.obs", method = 'pearson') 
+#correlation of all 54 numeric variables
+
+Ranked_cor_67_numericV <- as.matrix(sort(cor_67_numericV[,'SalePrice'], decreasing = TRUE))
+#gives correlations in decreasing strength
+
+top_cor_67_numericV <- names(which(apply(Ranked_cor_67_numericV, 1, function(x) abs(x)>0.5))) 
+#top correlations above 0.5 or -0.5. 
+
+cor_67_numericV <- cor_67_numericV[top_cor_67_numericV,top_cor_67_numericV]
+
+corrplot.mixed(cor_67_numericV, tl.col = 'blue', tl.pos = 'lt')
+
+#Now have 8 variables above 0.5 and will build model with these to test.
+
+
+
+```
+2.5 What kind of house will be sold for higher price?  - correlation shows variables of that type house
+
+
+CREATE NEW MODEL - TOP FEATURES 8
+```{r}
+
+top8set <- new_95percentile[, c("SalePrice", "Total.Sq.Feet", "Overall.Qual", "Total.Bathrooms", "Garage.Cars", "Bsmt.Qual", "Kitchen.Qual", "Year.Remod.Add", "FoundationPConc")]
+
+#View(top8set)
+
+dim(top8set)
+#2128 by 9 , includes response variable. 
+
+#Split new data into a training and test set
+set.seed(200)
+top8set_1 <- sample(nrow(top8set), floor(nrow(top8set)*0.7))
+train_new <- top8set[top8set_1,]
+
+test_new <- top8set[-top8set_1,]
+
+
+dim(train_new)
+#1489 rows by 9
+dim(test_new)
+#639 rows by 9
+
+#test to make sure all data was divided into 2 groups. And this is true.
+nrow(top8set) == (nrow(train_new) + nrow(test_new))
+#split data into training and test by 70/30.
+```
+
+Make difference if remove foundaionPcon variable??
+```{r}
+
+top7set <- new_95percentile[, c("SalePrice", "Total.Sq.Feet", "Overall.Qual", "Total.Bathrooms", "Garage.Cars", "Bsmt.Qual", "Kitchen.Qual", "Year.Remod.Add")]
+
+top7set_1 <- sample(nrow(top7set), floor(nrow(top7set)*0.7))
+train_new_7 <- top7set[top7set_1,]
+
+test_new_7 <- top7set[-top7set_1,]
+
+third_model <- lm(SalePrice ~ ., data = train_new_7)
+
+prediction_new_7 <- predict(third_model, test_new_7, type = 'response')
+model_output_new_7 <- cbind(test_new_7, prediction_new_7)
+
+rmse(top7set$SalePrice,model_output_new_7)
+#rmse is a bit better at 0.316 vs 0.343.
+```
+Second model 8 variables
+```{r}
+second_model <- lm(SalePrice ~ ., data = train_new)
+#View(new_95percentile)
+summary(second_model)
+#adjusted R squared is 0.835.
+
+```
+Evaluate Model Performance //Crossvalidation in R 10-fold try look at error measures
+```{r}
+ #10 fold cross validation try
+#test error of model with cross-validation
+#This function gives internal and cross-validation measures of predictive accuracy for ordinary linear regression. The data are randomly assigned to a number of `folds'. Each fold is removed, in turn, while the remaining data is used to re-fit the regression model and to predict at the deleted observations.
+
+#Need to install to use cv.lm()
+install.packages("DAAG")
+library(DAAG)
+
+
+cv.lm(data=top8set, form.lm=second_model, m= 10, plotit = F)
+#10 folds of 212 observations
+#sum of squares, mean sum of squares and f ratio
+#anova table for results. sum of squares divided by degree of freedom equals mean of squares
+#A large F ratio means that the variation among group means is more than you'd expect to see by chance
+
+#USE IN REPORT BELOW
+#cv.lm(data=top8set, form.lm=second_model, m= 10, dots = FALSE, seed=33, plotit=TRUE, printit=TRUE)
+#provides visual to use in report!!
+#mean square error is 0.00084 so really low. Overall ms is similar to the ms of each k-fold, does that suggest that the predictive accuracy is good?...most round out to be 0 so would save very similiar in each fold. 
+
+#Lesser the MSE => smaller is the error => better the estimator.
+#mse 0.00084 really good
+
+#HAs anova included so 
+#Null hypothesis: the means of the different groups are the same
+#Alternative hypothesis: At least one sample mean is not equal to the others.
+#since p value is below 0.05 can conclude statistical significance between groups..all but foundationPconc. 
+````
+
+second model predict on test set new
+```{r}
+
+prediction_new <- predict(second_model, test_new, type = 'response')
+model_output_new <- cbind(test_new, prediction_new)
+
+#View(model_output_new)
+
+testvspredicted <- cbind(test_new$SalePrice, prediction_new)
+#this puts 1st column of the actual sale prices of a home vs second column of the predicted
+#View(testvspredicted)
+head(testvspredicted)
+
+rmse(top8set$SalePrice,model_output_new)
+#has a rmse of 0.343. !! remse of 8 variable model
+
+
+shapiro.test(second_model_predict$Residual) #test normality of residuals.
+#he null-hypothesis of this test is that the population is normally distributed. Thus, on the one hand, if the p-value is less than the chosen alpha level, then the null hypothesis is rejected and there is evidence that the data tested are not normally distributed.
+#alpha level of 0.05 95% accuarte...p value is below of can accept null hypothsus as normally distributed significant. residuals.
+
+t.test(top8set$Total.Sq.Feet, top8set$Overall.Qual)
+#unpaired two sample t-test used to compare mean of two independent groups
+#The t-test can be used, for example, to determine if two sets of data are significantly different from each other.
+#A large t-score indicates that the groups are different.
+#A small t-score indicates that the groups are similar.
+
+t.test(top8set$Garage.Cars, top8set$Bsmt.Qual)
+#p value below 0.05 so means are significantly different from eachother keep
+
+t.test(top8set$FoundationPConc, top8set$Total.Sq.Feet)
+#all significant different means. 
+
+#normalize rmse? RMSE/(max(DV)-min(DV)) 
+
+
+#has a rmse of 0.343. !! remse of 8 variable model
+
+#RMSE info... If the RMSE for the test set is much higher than that of the training set, it is likely that you've badly over fit the data, i.e. you've created a model that tests well in sample, but has little predictive value when tested out of sample.
+#how close the observed data points are to the model's predicted values
+
+#RMSE gives sense of how close (or far) your predicted values are from the actual data you are attempting to model.
+#It is sensitive to large errors (penalizes large prediction errors more than smaller prediction errors).
+
+```
+
+---- TO USE in seeing predictions are end----
+
+See how many predictions were over or under actual values. 
+```{r}
+
+testvspredicted <- as.data.frame(cbind(test_new$SalePrice, prediction_new))
+
+#install.packages("tibble") -- version of R not compatialble.
+#library(tibble)
+#enframe(testvspredicted)
+
+testvspredicted[testvspredicted$V1 > testvspredicted$prediction_new, "Compare"] <- "Under"
+testvspredicted[testvspredicted$V1 < testvspredicted$prediction_new, "Compare"] <- "Over"
+testvspredicted[testvspredicted$V1 == testvspredicted$prediction_new, "Compare"] <- "Equal"
+
+#under for prediction under actual, over for predication over actual and equal for equal. 
+head(testvspredicted)
+table(testvspredicted$Compare)
+#So 340 were over adn 299 were under. Not overly favouring one or other. Balanced model. 
+
+```
+ADD column for error!! LOOK AT error
+
+```{r}
+
+residuals <- prediction_new - test_new$SalePrice
+second_model_predict <- data.frame('Predicted' = prediction_new, 'Actual' = test_new$SalePrice,'Residual' = residuals, "Compare" = testvspredicted$Compare)
+
+head(second_model_predict)
+#View(second_model_predict)
+
+#can look at error against each feature now!!!!!!
+
+features_residual <- as.data.frame(cbind(test_new,second_model_predict))
+head(features_residual)
+
+#Plots of error against each individual feature!!
+  
+scatter.hist(features_residual$Total.Sq.Feet, features_residual$Residual)
+#0.13
+scatter.hist(features_residual$Total.Bathrooms, features_residual$Residual)
+#0.032
+scatter.hist(features_residual$Overall.Qual, features_residual$Residual)
+#0.024
+scatter.hist(features_residual$Garage.Cars, features_residual$Residual)
+#-0.0031
+scatter.hist(features_residual$Bsmt.Qual, features_residual$Residual)
+#-0.025
+scatter.hist(features_residual$Kitchen.Qual, features_residual$Residual)
+#-0.068
+scatter.hist(features_residual$Year.Remod.Add, features_residual$Residual)
+#-0.032
+scatter.hist(features_residual$FoundationPConc, features_residual$Residual)
+#-0.0.64
+scatter.hist(features_residual$SalePrice, features_residual$Residual)
+#-0.38
+#negative correlation...as saleprice increases prediction error is less. 
+scatter.hist(features_residual$Predicted, features_residual$Residual)
+#0.067
+
+
+````
+
+
+#Denormalize - Trying to figure out. 
+```{r}
+#summary(ames$SalePrice)
+#max value 755000
+#min 12790
+
+#denormalize <- normalized*(max(x)-min(x)) + min(x)
+#norm*742210 + 12790
+
+denorm <- function(x) {return( (x)*742210 + 12790)  } 
+#this function will turn normalized values of saleprice back into values to give a better represetnation of the prices of the houses. 
+
+new_denorm_AP <- as.data.frame((lapply(testvspredicted[,1:2], denorm)))
+head(new_denorm_AP)
+#shows comparison betwen prices! My submission. 
+
+
+#add new residuals column for differences in prices from Actual minus predicted. and also add compare column to show if over or under. over being over actual and under being under actual for predictions. 
+residuals_new <- new_denorm_AP$V1 - new_denorm_AP$prediction_new
+submission <- data.frame('Actual' = new_denorm_AP$V1,'Predicted' = new_denorm_AP$prediction_new, 'Residual' = residuals_new, "Compare" = testvspredicted$Compare)
+
+head(submission)
+summary(submission$Residual)
+scatter.hist(submission$Predicted, submission$Actual)
+#strong positive correlation of 0.9. actual vs predicted submissions!
+
+#the mean residual between prices is $2441 which is pretty good when talking about a target variable with a large spread of values like house prices. Below actual price by 2500 roughly. 
+#max over and under is roughly 80,000 (-79090 and 79350). 
+
+rmse(submission$Actual, submission$Predicted)
+#22929.53
+#According to FPP, “the root mean square error for regression says how far typical points are above or below the regression line. The RMSE is to the regression line as the SD is to the average. For instance, if the scatter diagram is football-shaped, about 68% of the points on the scatter diagram will be within one RMSE of the regression line, about 95% of then will be within 2 RMSE of the regression line”.
+
+print(mean(abs(residuals_new) < (rmse(submission$Actual, submission$Predicted))))
+#observations within 1 rmse
+#0.7386 proportion of values 
+print(mean(abs(residuals_new) < 2*(rmse(submission$Actual, submission$Predicted))))
+#within 2 rmse 0.945%..so 95 percent of observations within 2 rmse! pretty good
+
+#GOOD POINT FOR REPORT...rmse looks good for predictions
+
+summary(submission)
+head(submission)
+#good to use in REPORT and talk about. for test set my predictions. run same model on all data to see if holds up?
+```
+ABOVE IS A POSSIBLE SUBMISSION METHOD _ reverse normalized to see prices. 
+
+
+-------All compare predictions. not just test set...to see predicted, actual and residuals with model choosen
+
+```{r}
+#do same for predictions on entire dataset vs real!
+#entire dataset would be...top8set before split into train and test
+
+all_compare <- lm(SalePrice ~ ., data = top8set)
+
+all_predictions <- predict(all_compare, top8set, type = 'response')
+model_output_all <- as.data.frame(cbind(top8set,all_predictions))
+
+model_output_all[model_output_all$SalePrice > model_output_all$all_predictions, "Compare"] <- "Under"
+model_output_all[model_output_all$SalePrice < model_output_all$all_predictions, "Compare"] <- "Over"
+model_output_all[model_output_all$SalePrice == model_output_all$all_predictions, "Compare"] <- "Equal"
+#under for prediction under actual, over for predication over actual and equal for equal. 
+head(model_output_all)
+table(model_output_all$Compare)
+
+
+#of the 2128 predictions by model, 1054 over and 1074 under so model is pretty balanced. 
+
+#summary(model_output_all$SalePrice)
+#summary(model_output_all$all_predictions)
+
+#lower min value could be undervaluing some homes.
+```
+
+denormalize all vs predictions with 8 feature model, see if rmse is similar from test set to full set.
+```{r}
+full_de <- as.data.frame(cbind(top8set$SalePrice, all_predictions))
+
+full_de_norm <- as.data.frame((lapply(full_de[,1:2], denorm)))
+#head(new_denorm_AP)
+
+residuals_all <- full_de_norm$V1 - full_de_norm$all_predictions
+
+all_APR <- data.frame('Actual' = full_de_norm$V1,'Predicted' = full_de_norm$all_predictions, 'Residual' = residuals_all)
+head(all_APR)
+
+rmse(all_APR$Actual, all_APR$Predicted)
+#21400
+#slightly lower than the rmse of the test set (22929.53) so model did well on the full data set and wasnt just overfitted to test set. since range of actual values is 35001 to 315001, this is a good rmse. range of predicted values is 17322 to 308998.
+#mean of actual and predicted are same at 170138. median is actual 159976 vs predicted 167019. median error is 156.3. 
+
+summary(all_APR)
+```
+
+
+---------------
+HERE HERE HERE -----------------------------------------HERE
+
+
+*once see error for all, can try to convert back - reverse normalize to see in prices form!!!
+------------
+----------
+-continue here add in more evaluation. 
+-add statistical test.
+
+Template for analysis (made model, saw overfitting, feature selection pearson continous variables/correlation, new model 8 variables, predict and look at residuals(errors..plots), try features with random forest model*, compare results of models, crossvalidat (analyze error), run predictions again - look at these and denormalize and talk about, conclusion.
+
+))
+split
+model
+!!!Residual is the difference between the observed value and the predicted value from the regression equation an estimate of error ** talk about in report
+crossvalid
+test
+rmse
+residuals
+prediction
+------
+--------
+-----
+
+
+
+----------------------------------------------------------------------------------
+8)	Results
+a.	Look at statistical tests on results. 
+b.	Precision, recall etc. 
+c.	Look into reasons behind variables with most predictive significance. Discussion and application to housing market. Relate to relevancy and applicability to for other cities housing parameters. Features that are missing such as backyard size, economy of closest major city, proximity to public transportations, schools, etc. 
+
+CONCLUSION - summary of what did and major points findings
+
+
+
+
+
+
+
+-
+-
+-
+-
+-
+-
+-
+-
+
+-
+-
+
+-
+-
+--
+
+
+
+
+
+
+
+
+
+
+
+
+
+TOMORROW GO TO RYERSON!! and try this?? have set up! - RandomForest and Naiyes Bayes!!!
+```{r}
+
+#install.packages('randomForest')
+#library(randomForest)
+
+second_model <- randomforest(SalePrice~., data=training)
+
+
+prediction <- predict(second_model, test)
+model_output <- cbind(test, prediction)
+
+model_output$log_prediction <- log(model_output$prediction)
+model_output$log_SalePrice <- log(model_output$SalePrice)
+
+rmse(model_output$log_SalePrice, model_output$log_prediction)
+
+
+#compare r squared and rmse values. 
+
+
+Forest
+#random_forest <- randomForest(SalePrice ~., data = train, importance= TRUE, ntree=500, nodes size=7, na.action = na.roughfix)
+```
+
+r2 is relative measure of fit and RMSE is absolute.
+**randomforest package doesnt work
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Other Techniques read about
+
+#install.package('caret') #not supported on R. 3.3.3
+#library(caret)
+
+LASSO
+lars, glmnet packages?
+
+exgboost?
+
+ideas:
+6)	Train and Test Algorithms
+a.	Regression
+b.	Random forest
+c.	CART
+d.	SVM support vector machine?
+e.	Ensemble learning? Xgboost (use this for next section to try and improve results or random forest too 
+f.	Lasso or ridge regression
+g.	Neural network? Something new to try?? Thought was really interesting
+
+•	Split into test and train sets so can use k-fold validation to compare models.
+
+
+Regression - stepwise
+
+Prediction - 10 fold cross validation
+#lower mse the better
+
+
+```
+Neural??
+```{r}
+scaling to mean 0, std 1 for one-hot-encoded categorical data, when training neural networks.
+
+ Neural networks achieve non-linearity by using redundant weights and stacking multiple layers. If you use 𝑘 nearest neighbors, it only looks at similarities between your samples, so bigger/smaller relation does not affect it in this case.
+ 
+ 
+ But if you scale the target, your mean squared error is automatically scaled. MSE>1 automatically means that you are doing worse than a constant (naive) prediction.
+ A target variable with a large spread of values, in turn, may result in large error gradient values causing weight values to change dramatically, making the learning process unstable.
+
+```
+
+forecast and model accuarcy 
+```{r}
+
+#extra to try for 1st model
+#install.packages('forecast', dependencies = TRUE)
+#library(forecast)
+predict1 <- predict(first_model, test, type = 'response')
+residuals <- test$SalePrice - predict1
+first_model_predict <- data.frame('Predicted' = predict1, 'Actual' = test$SalePrice, 'Residual' = residuals)
+accuracy(predict1, test$SalePrice)
+
+
+
+```
+
+```{r}
+Forest
+#random_forest <- randomForest(SalePrice ~., data = train, importance= TRUE, ntree=500, nodes size=7, na.action = na.roughfix)
+```
+
+```{r}
+
+
+```
+
+
+```{r}
+CART approach
+ALL numerical so classification tree wont give anything.
+
+#install.packages("rpart")
+#install.packages("rpart.plot")
+library(rpart)
+library(rpart.plot)
+
+class.tree <- rpart(SalePrice ~., data = train, control = rpart.control(0.01))
+
+plotcp(class.tree)
+printcp(class.tree)
+
+```
+
+
+```{r}
+head(complete3)
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+
+```
+
+
+```{r}
+
+```
+
+
+8. Evaluate the model performance. 
+
+```{r}
+test error of model with cross-validation
+#better than residuals
+#can train a SVM (support vector machine on data)
+
+accuracy, percision, recall?
+
+```
+
+
+
+
+
+----------------------------------------------------------------------------------
+4)	Data Preparation and Analysis
+a.	Load correctly
+b.	Format, not duplicates, missing values, fields are uniform, dimensions
+c.	Clean, mention summary and descriptive statistics as way to  draw insights from data…assist me in building a better expertise of the domain of features so I can for effectively look for patterns and relationships. 1st take. (can include, histogram, boplot, pairwise scatterplot to observe correlation, distribution of variables, skewness and potential outliers)
+d.	Look at target variable of final sale price. For continuous variables look at min, max, mean, median, quartiles. Also since target variable of final sale price is continuous want to look at continuous house prices instead of individual house price ranges. 
+e.	Transform data or normalize (ONE HOT ENCODING): In order to run models on data will need to transform it. Don't want string types to train machine learning models so need values to be numerical. Ways includes converting discrete to continuous variables (ex. One-hot-encoding, convert and create more columns). Another way involves creating dummy variables for categorical variables, such as assigning values of 0 or 1 to show if a 
+----------------------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+----------------------------------------------------------------------------------
+5)	Feature selection:
+a.	Optimize parameters by selecting and analyzing / build model (this case regression)
+b.	Normalization.  (Xnew=(X-Xmin)/(Xmax-Xmin). Scale. 
+c.	Use creativity to build new features from the input data. An example is total square footage (TOTAL BSMT SF + GR LIV AREA). Look for positive variables that might add value such as being near a park or negative variables that reduce value such as being near a railroad. 
+d.	Compare feature selection from manual chosen vs algorithm selection.
+----------------------------------------------------------------------------------
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+```{r}
+
+```
+
+----------------------------------------------------------------------------------
+6)	Train and Test Algorithms
+a.	Regression
+b.	Random forest
+c.	CART
+d.	SVM support vector machine?
+e.	Ensemble learning? Xgboost (use this for next section to try and improve results or random forest too 
+f.	Lasso or ridge regression
+g.	Neural network? Something new to try?? Thought was really interesting
+
+•	Split into test and train sets so can use k-fold validation to compare models. (80/20, train, test, 10 fold
+----------------------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+----------------------------------------------------------------------------------
+7)	Evaluate
+a.	Choose performance metrics.
+b.	Avoid overfitting
+c.	GO BACK part: PCA. feature engineering and using the statistical procedure of principle component analysis to reduce dimensionality & improve prediction results. Such as accuracy. 
+d.	To evaluate performance can look at plot of actual vs predicted values, see a fitted regression line,  r squared statistical measure to see the level of variability the model explains, (A r^2 of 1 would indicate the regression predictions fit the data perfectly, I’d be looking for a low P value and high r^2 value combination to see if my regression model has significant variables). Can look at mean absolute error also. 
+----------------------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+----------------------------------------------------------------------------------
+8)	Results
+a.	Look at statistical tests on results. 
+b.	Precision, recall etc. 
+c.	Look into reasons behind variables with most predictive significance. Discussion and application to housing market. Relate to relevancy and applicability to for other cities housing parameters. Features that are missing such as backyard size, economy of closest major city, proximity to public transportations, schools, etc. 
+
+CONCLUSION - summary of what did and major points findings
+----------------------------------------------------------------------------------
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
